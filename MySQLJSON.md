@@ -239,3 +239,105 @@
         +--------+------+------+--------------+
         |      2 |    0 |    0 |            0 |
         +--------+------+------+--------------+
+
+## 更新JSON Object
+
+### JSON_INSERT()函数
+    
+    插入新值，但不会覆盖已存在的值
+    
+    mysql> update ccc_halls_test set hall_attr = JSON_INSERT(hall_attr, '$.effect_4d', 1, '$.frame_type', 3) WHERE  id = 80880;
+    
+    mysql> select id, hall_attr, cert_sn from ccc_halls_test  where  id = 80880;                                   
+    +-------+--------------------------------------------------------------------------+----------------------+
+    | id    | hall_attr                                                                | cert_sn              |
+    +-------+--------------------------------------------------------------------------+----------------------+
+    | 80880 | {"effect_4d": 1, "frame_type": 2, "image_type": 2, "resolution_type": 2} | ["A63784", "A63984"] |
+    +-------+--------------------------------------------------------------------------+----------------------+
+
+### JSON_SET()函数
+    
+    插入新值，并覆盖已存在的值
+    
+    mysql> update ccc_halls_test set hall_attr = JSON_SET(hall_attr, '$.sound_type', 1, '$.frame_type', 3) WHERE  idd = 80880;
+    
+    mysql> select id, hall_attr  from ccc_halls_test  where  id = 80880;
+    +-------+-------------------------------------------------------------------------------------------+
+    | id    | hall_attr                                                                                 |
+    +-------+-------------------------------------------------------------------------------------------+
+    | 80880 | {"effect_4d": 1, "frame_type": 3, "image_type": 2, "sound_type": 1, "resolution_type": 2} |
+    +-------+-------------------------------------------------------------------------------------------+
+    
+### JSON_REPLACE()函数
+    
+    只替换已存在的值
+    
+    mysql> update ccc_halls_test set hall_attr = JSON_REPLACE(hall_attr, '$.sound_type', 2, '$.hall_type', 3) WHERE   id = 80880;
+    
+    mysql> select id, hall_attr  from ccc_halls_test  where  id = 80880;                                           
+    +-------+-------------------------------------------------------------------------------------------+
+    | id    | hall_attr                                                                                 |
+    +-------+-------------------------------------------------------------------------------------------+
+    | 80880 | {"effect_4d": 1, "frame_type": 3, "image_type": 2, "sound_type": 2, "resolution_type": 2} |
+    +-------+-------------------------------------------------------------------------------------------+
+
+### JSON_REMOVE()函数
+    
+    删除JSON元素
+    
+    mysql> update ccc_halls_test set hall_attr = JSON_REMOVE(hall_attr, '$.sound_type', '$.effect_4d') WHERE  id = 80880;
+    
+    mysql> select id, hall_attr  from ccc_halls_test  where  id = 80880;                                           
+    +-------+----------------------------------------------------------+
+    | id    | hall_attr                                                |
+    +-------+----------------------------------------------------------+
+    | 80880 | {"frame_type": 3, "image_type": 2, "resolution_type": 2} |
+    +-------+----------------------------------------------------------+
+
+## 更新JSON Array
+
+### JSON_ARRAY_APPEND()
+
+    数组中添加元素
+    
+    mysql> update ccc_halls_test set cert_sn = JSON_ARRAY_APPEND(cert_sn, '$[0]', 'A63785') WHERE  id = 80880;
+    
+    mysql> select id, cert_sn  from ccc_halls_test  where  id = 80880;
+    +-------+---------------------------------------+
+    | id    | cert_sn                               |
+    +-------+---------------------------------------+
+    | 80880 | [["A63784","A63785"], "A63984"]       |
+    +-------+---------------------------------------+
+
+
+### JSON_ARRAY_INSERT()
+
+    mysql> update ccc_halls_test set cert_sn = JSON_ARRAY_INSERT(cert_sn, '$[0]', 'A6000') WHERE  id = 80880;
+    
+    mysql> select id, cert_sn  from ccc_halls_test  where  id = 80880;
+    +-------+-------------------------------------------------+
+    | id    | cert_sn                                         |
+    +-------+-------------------------------------------------+
+    | 80880 | ["A6000", ["A63784","A63785"], "A63984"]        |
+    +-------+-------------------------------------------------+
+    
+### JSON_REMOVE
+    
+    mysql> update ccc_halls_test set cert_sn = JSON_ARRAY_REMOVE(cert_sn, '$[1]', 'A6000') WHERE  id = 80880;
+    
+    mysql> select id, cert_sn  from ccc_halls_test  where  id = 80880;
+    +-------+----------------------------+
+    | id    | cert_sn                    |
+    +-------+----------------------------+
+    | 80880 | ["A6000", "A63984"]        |
+    +-------+----------------------------+
+
+## 创建索引
+
+    MySQL的JSON格式数据不能直接创建索引，但是可以变通一下，把要搜索的数据单独拎出来，单独一个数据列，然后在这个字段上创建一个索引，官方的例子：
+    
+    CREATE TABLE muscleape_office(
+      c JSON,
+      g INT GENERATED ALWAYS AS (c->"$.id"),
+      INDEX i (g)
+    );
