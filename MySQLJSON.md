@@ -341,3 +341,193 @@
       g INT GENERATED ALWAYS AS (c->"$.id"),
       INDEX i (g)
     );
+
+
+# MySQL常用函数
+
+## 1.  concat 字符串连接
+
+        返回结果为连接参数产生的字符串。如有任何一个参数为NULL ，则返回值为 NULL。可以有一个或多个参数。
+
+        mysql> select id, file_name from cubor_chain_report where id = 122;
+        +-----+--------------+
+        | id  | file_name    |
+        +-----+--------------+
+        | 122 | 片商报表     |
+        +-----+--------------+
+
+        mysql> select id, file_name, concat(file_name, '-测试') as concat_name from cubor_chain_report where id = 122; 
+        +-----+--------------+---------------------+
+        | id  | file_name    | concat_name         |
+        +-----+--------------+---------------------+
+        | 122 | 片商报表     | 片商报表-测试       |
+        +-----+--------------+---------------------+
+
+        mysql> select id, file_name, concat(file_name, '-测试', '-1') as concat_name from cubor_chain_report where id = 122;
+        +-----+--------------+-----------------------+
+        | id  | file_name    | concat_name           |
+        +-----+--------------+-----------------------+
+        | 122 | 片商报表     | 片商报表-测试-1       |
+        +-----+--------------+-----------------------+
+
+## 2. CONCAT_WS 字符串连接 指定参数之间的分隔符
+
+        分隔符可以是一个字符串，也可以是其它参数。如果分隔符为 NULL，则结果为 NULL。函数会忽略任何分隔符参数后的 NULL 值。
+        但是CONCAT_WS()不会忽略任何空字符串。 (然而会忽略所有的 NULL）。
+
+        mysql> select id, file_name, CONCAT_WS("-", file_name, "测试") as concat_name  from cubor_chain_report where idd = 122;
+        +-----+--------------+---------------------+
+        | id  | file_name    | concat_name         |
+        +-----+--------------+---------------------+
+        | 122 | 片商报表     | 片商报表-测试       |
+        +-----+--------------+---------------------+
+
+        mysql> select id, file_name, CONCAT_WS("-", file_name, "测试", NULL, 'LAST') as concat_name  from cubor_chain_rreport where id = 122;
+        +-----+--------------+--------------------------+
+        | id  | file_name    | concat_name              |
+        +-----+--------------+--------------------------+
+        | 122 | 片商报表     | 片商报表-测试-LAST       |
+        +-----+--------------+--------------------------+
+
+        mysql> select id, file_name, CONCAT_WS("-", file_name, "测试", '', 'LAST') as concat_name  from cubor_chain_repport where id = 122;
+        +-----+--------------+---------------------------+
+        | id  | file_name    | concat_name               |
+        +-----+--------------+---------------------------+
+        | 122 | 片商报表     | 片商报表-测试--LAST       |
+        +-----+--------------+---------------------------+
+
+        mysql> select id, file_name, CONCAT_WS("-", file_name, "测试", ' ', 'LAST') as concat_name  from cubor_chain_reeport where id = 122;
+        +-----+--------------+----------------------------+
+        | id  | file_name    | concat_name                |
+        +-----+--------------+----------------------------+
+        | 122 | 片商报表     | 片商报表-测试- -LAST       |
+        +-----+--------------+----------------------------+
+
+## GROUP_CONCAT（）函数
+
+    返回一个字符串结果，该结果由分组中的值连接组合而成
+
+    mysql> select cr.id as report_id, cd.id, cd.file_name from cubor_settle_report as cr inner join 
+    cubor_settle_report_detail as cd  on  cr.id = cd.report_id;
+
+    +-----------+----+-----------+
+    | report_id | id | file_name |
+    +-----------+----+-----------+
+    |         2 |  1 | 1.csv     |
+    |         2 |  2 | 2.csv     |
+    |         3 |  3 | 3.csv     |
+    |         3 |  4 | 4.csv     |
+    |         4 |  5 | 5.csv     |
+    |         4 |  6 | 6.csv     |
+    |         5 |  7 | 7.csv     |
+    |         5 |  8 | 8.csv     |
+    |         6 |  9 | 9.csv     |
+    |         6 | 10 | 10.csv    |
+    |         7 | 11 | 11.csv    |
+    |         7 | 12 | 12.csv    |
+    +-----------+----+-----------+
+
+### 系统默认的分隔符是逗号
+    mysql> select cr.id as report_id, GROUP_CONCAT(cd.id) as sub_ids  from cubor_settle_report as cr inner join cubor_settle_report_detail as cd 
+    on  cr.id = cd.report_id group by cr.id;
+
+    +-----------+---------+
+    | report_id | sub_ids |
+    +-----------+---------+
+    |         2 | 1,2     |
+    |         3 | 4,3     |
+    |         4 | 5,6     |
+    |         5 | 7,8     |
+    |         6 | 9,10    |
+    |         7 | 11,12   |
+    +-----------+---------+
+
+### 修改分隔符:
+    mysql> select cr.id as report_id, GROUP_CONCAT( cd.id  SEPARATOR '_') as sub_ids  from cubor_settle_report as cr inner join cubor_settle_report_detail as cd 
+    on  cr.id = cd.report_id group by cr.id;
+
+    +-----------+---------+
+    | report_id | sub_ids |
+    +-----------+---------+
+    |         2 | 1_2     |
+    |         3 | 4_3     |
+    |         4 | 5_6     |
+    |         5 | 7_8     |
+    |         6 | 9_10    |
+    |         7 | 11_12   |
+    +-----------+---------+
+
+### 排序:
+    mysql> select cr.id as report_id, GROUP_CONCAT(cd.id ORDER BY cd.id DESC SEPARATOR '_') as sub_ids  from cubor_settle_report as cr inner join cubor_settle_report_detail as cd 
+    on  cr.id = cd.report_id group by cr.id;
+
+    +-----------+---------+
+    | report_id | sub_ids |
+    +-----------+---------+
+    |         2 | 2_1     |
+    |         3 | 4_3     |
+    |         4 | 6_5     |
+    |         5 | 8_7     |
+    |         6 | 10_9    |
+    |         7 | 12_11   |
+    +-----------+---------+
+
+### GROUP_CONCAT 的最大长度：
+     
+     GROUP_CONCAT将某一字段的值按指定的字符进行累加，系统默认的分隔符是逗号，可以累加的字符长度为1024字节。
+
+    修改默认字符大小：
+        1. 在MySQL配置文件中加上
+            group_concat_max_len = 102400 #你要的最大长度
+
+        或者：
+         mysql> SET GLOBAL group_concat_max_len=102400;
+
+## 4. date_format：将日期转换成字符
+
+    mysql> select id, create_time, DATE_FORMAT(create_time, '%Y-%m-%d') as create_date from cubor_chain_report wherre id = 122;
+    +-----+---------------------+-------------+
+    | id  | create_time         | create_date |
+    +-----+---------------------+-------------+
+    | 122 | 2020-05-01 00:00:00 | 2020-05-01  |
+    +-----+---------------------+-------------+
+
+    mysql> select id, create_time, DATE_FORMAT(create_time, '%Y年%m月') as create_month from cubor_chain_report wheere id = 122;
+    +-----+---------------------+--------------+
+    | id  | create_time         | create_month |
+    +-----+---------------------+--------------+
+    | 122 | 2020-05-01 00:00:00 | 2020年05月   |
+    +-----+---------------------+--------------+
+
+## 5. str_to_date：将字符通过指定的格式转换成日期
+    字符串必须为标准时间格式
+
+    mysql> select id, create_time, str_to_date("2020-5-15", '%Y-%m-%d') as create_date from cubor_chain_report where id = 122;
+    +-----+---------------------+-------------+
+    | id  | create_time         | create_date |
+    +-----+---------------------+-------------+
+    | 122 | 2020-05-01 00:00:00 | 2020-05-15  |
+    +-----+---------------------+-------------+
+
+    mysql> select id, create_time, str_to_date("2020-05", '%Y-%m') as create_date from cubor_chain_report where id  = 122;
+    +-----+---------------------+-------------+
+    | id  | create_time         | create_date |
+    +-----+---------------------+-------------+
+    | 122 | 2020-05-01 00:00:00 | NULL        |
+    +-----+---------------------+-------------+
+
+    某个字段是str不是标准时间格式,可通过拼接完成
+
+    mysql> select id, file_name, str_to_date(file_name, '%Y-%m-%d') as create_date from cubor_chain_report where idd = 122;
+    +-----+-----------+-------------+
+    | id  | file_name | create_date |
+    +-----+-----------+-------------+
+    | 122 | 2020-05   | NULL        |
+    +-----+-----------+-------------+
+
+    mysql> select id, file_name, str_to_date(concat(file_name,"-12"), '%Y-%m-%d') as create_date from cubor_chain_rreport where id = 122;
+    +-----+-----------+-------------+
+    | id  | file_name | create_date |
+    +-----+-----------+-------------+
+    | 122 | 2020-05   | 2020-05-12  |
+    +-----+-----------+-------------+
