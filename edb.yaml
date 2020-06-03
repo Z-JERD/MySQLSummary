@@ -1,0 +1,24 @@
+connection:
+  sqllog: print
+  retrys: 3
+
+# host: 
+# user:
+# passwd:
+# db:
+
+arch2018:
+  host: 10.110.20.11
+  port: 3307
+  user: huayingjuhe
+  passwd: MySQL8.huayingjuhe.com
+  db: arch2018
+
+
+arch2018_tsc:
+  host: 10.110.20.11
+  port: 3307
+  user: huayingjuhe
+  passwd: MySQL8.huayingjuhe.com
+  db: arch2018
+  autocommit: false
