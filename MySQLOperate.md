@@ -1,5 +1,33 @@
 # centos安装MySQL5.7
 
+## 查看MySQL是否安装：
+### 方式1： 通过已安装的软件
+    
+    [root@localhost Desktop]# rpm -qa |grep mysql
+         mysql-libs-5.1.71-1.el6.x86_64 结果是这个，表示没有安装mysql
+     
+    [root@localhost ~]# rpm -qa |grep mysql
+        mysql-community-libs-compat-5.7.25-1.el7.x86_64
+        mysql-community-libs-5.7.25-1.el7.x86_64
+        mysql57-community-release-el7-7.noarch
+        mysql-community-client-5.7.25-1.el7.x86_64
+        mysql-community-server-5.7.25-1.el7.x86_64
+        mysql-community-common-5.7.25-1.el7.x86_64
+        
+        有server和client表示已安装
+        
+ ### 方式2：启动MySQL能否成功
+ 
+    [root@localhost ~]# service mysqld start
+
+    已安装则显示：
+        
+        启动 MySQL：               [确定]
+        
+    未安装则显示：
+    
+        mysqld:未被识别的服务
+
 ## 下载：
     1.添加mysql源
         # rpm -Uvh http://repo.mysql.com//mysql57-community-release-el7-7.noarch.rpm
@@ -72,6 +100,13 @@
           PS:-p密码部分，可以直接指定密码，如果不指定，会提示输入密码
     登录其他服务器：
            mysql -h10.110.1.90 -uphp -p -P3307
+
+## 查看MySQL配置文件路径：
+    
+    [root@localhost ~]# mysqld --verbose --help |grep -A 1 'Default options'
+    
+    Default options are read from the following files in the given order:
+    /etc/my.cnf /etc/mysql/my.cnf /usr/etc/my.cnf ~/.my.cnf
            
 ## 查看数据库版本
     mysql>  select version();
