@@ -47,7 +47,7 @@
     
 ## 查询JSON
     
-    json_extract 提取json值
+    json_extract        提取json值  如果查询没有的key,那么是可以查询,不过返回的是NULL
     
     column->path        json_extract的简洁写法，MySQL 5.7.9开始支持
                         其中对象类型path的表示方式 $.path，数组类型的表示方式 $[index]
