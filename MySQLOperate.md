@@ -643,3 +643,151 @@
         进入数据库控制台：
             mysql>use 数据库 
             mysql>source /root/database.sql   
+	    
+# inner join left join联查过滤条件放在on还是where中？
+
+
+## join联查可以简单理解为以下过程：
+
+    1. 首先两个表做一个笛卡尔积。
+    
+    2. 然后根据on后面的条件对这个笛卡尔积做一个过滤形成一张临时表。
+    
+    3.如果有where就对上一步的临时表再进行过滤，进而得到最终的结果集
+
+## ccc_cinemas中符合条件的数据：
+    
+    mysql>  select count(1) from ccc_cinemas where status = 1;
+    +----------+
+    | count(1) |
+    +----------+
+    |       29 |
+    +----------+
+
+## ccc_halls和ccc_cinemas 联表查询：
+
+    mysql> select ch.cinema_code,  count(ch.id) as total from  ccc_halls ch where cinema_code in 
+    (select code from ccc_cinemas where status = 1) group by  ch.`cinema_code` order by ch.cinema_code asc;
+    
+    +-------------+-------+
+    | cinema_code | total |
+    +-------------+-------+
+    |    12013001 |     3 |
+    |    13101501 |     2 |
+    |    21011431 |    24 |
+    |    23013901 |     4 |
+    |    31052601 |     4 |
+    |    65322211 |     1 |
+    +-------------+-------+
+    6 rows in set (0.01 sec)
+ 
+
+## inner join:
+
+### 写法1：过滤条件写在where中
+    
+        mysql> select  cc.code, cc.name, cc.status, count(ch.id) as total from ccc_cinemas cc  inner join ccc_halls ch on 
+        ch.cinema_code = cc.code  where cc.status = 1 group by  cc.`code`;
+       
+        +----------+-----------------------------------------------+--------+-------+
+        | code     | name                                          | status | total |
+        +----------+-----------------------------------------------+--------+-------+
+        | 12013001 | 天津中青国际影城                              |      1 |     3 |
+        | 13101501 | 成安众泰数字影城                              |      1 |     2 |
+        | 21011431 | 辽宁省沈阳市唯米特影城                        |      1 |    24 |
+        | 23013901 | 双城市嘉亿影城                                |      1 |     4 |
+        | 31052601 | 上海市普陀区邻嘉影院新百安店                  |      1 |     4 |
+        | 65322211 | 新疆墨玉县新玉电影放映中心影城                |      1 |     1 |
+        +----------+-----------------------------------------------+--------+-------+
+        6 rows in set (0.01 sec)
+        
+### 写法2：过滤条件写在on后面的and中
+    
+        mysql> select  cc.code, cc.name, cc.status, count(ch.id) as total from ccc_cinemas cc  inner join ccc_halls ch on ch.cinema_code = cc.code 
+        and cc.status = 1 group by  cc.`code` order by cc.code asc;
+        
+        +----------+-----------------------------------------------+--------+-------+
+        | code     | name                                          | status | total |
+        +----------+-----------------------------------------------+--------+-------+
+        | 12013001 | 天津中青国际影城                              |      1 |     3 |
+        | 13101501 | 成安众泰数字影城                              |      1 |     2 |
+        | 21011431 | 辽宁省沈阳市唯米特影城                        |      1 |    24 |
+        | 23013901 | 双城市嘉亿影城                                |      1 |     4 |
+        | 31052601 | 上海市普陀区邻嘉影院新百安店                  |      1 |     4 |
+        | 65322211 | 新疆墨玉县新玉电影放映中心影城                |      1 |     1 |
+        +----------+-----------------------------------------------+--------+-------+
+        6 rows in set (0.01 sec)
+
+
+### 结论： 
+        
+        对于inner join 两种写法在查询结果上没有区别
+        
+        因为inner join对笛卡尔积做过滤生成的临时表，其中on后面的条件是对左右两个表同时生效的。
+        所以说无论是从第二步进行过滤还是从第三步进行过滤，效果是一样的。
+
+## left/right join:
+
+
+### left join on + and 过滤条件：
+    
+        mysql> select  cc.code, cc.name, cc.status, count(ch.id) as total from ccc_cinemas cc  left join  ccc_halls ch on ch.cinema_code = cc.code and cc.code = 11067401
+        group by  cc.`code`  order by total desc limit 10;
+       
+        +----------+--------------------------------------------------------+--------+-------+
+        | code     | name                                                   | status | total |
+        +----------+--------------------------------------------------------+--------+-------+
+        | 11067401 | 华影国际影城                                           |      2 |     1 |
+        | 42101001 | 襄阳万达国际电影城有限公司                             |      2 |     0 |
+        | 14070101 | 临汾星美科奥影城                                       |      3 |     0 |
+        | 65901051 | 石河子幕纬空间万都影城                                 |      2 |     0 |
+        | 43017701 | 潇湘佳福国际影城                                       |      2 |     0 |
+        | 51020016 | 四川省绵阳市三台县芦溪镇好来国际影城                   |      2 |     0 |
+        | 22030401 | 敦化市影剧院                                           |      3 |     0 |
+        | 35054461 | 福建泉州永春智泉影城                                   |      2 |     0 |
+        | 12111141 | 天津市西青区光耀华纳影城（中北店）                     |      3 |     0 |
+        | 36090331 | 高安市八景星河国际影院                                 |      3 |     0 |
+        +----------+--------------------------------------------------------+--------+-------+
+        10 rows in set (0.06 sec)
+
+
+        mysql> select  cc.code, cc.name, cc.status, count(ch.id) as total from ccc_cinemas cc  left join  ccc_halls ch on ch.cinema_code = cc.code and ch.cinema_code = 11067401
+        group by  cc.`code`  order by total desc limit 10;
+        
+        +----------+--------------------------------------------------------+--------+-------+
+        | code     | name                                                   | status | total |
+        +----------+--------------------------------------------------------+--------+-------+
+        | 11067401 | 华影国际影城                                           |      2 |     1 |
+        | 42101001 | 襄阳万达国际电影城有限公司                             |      2 |     0 |
+        | 14070101 | 临汾星美科奥影城                                       |      3 |     0 |
+        | 65901051 | 石河子幕纬空间万都影城                                 |      2 |     0 |
+        | 43017701 | 潇湘佳福国际影城                                       |      2 |     0 |
+        | 51020016 | 四川省绵阳市三台县芦溪镇好来国际影城                   |      2 |     0 |
+        | 22030401 | 敦化市影剧院                                           |      3 |     0 |
+        | 35054461 | 福建泉州永春智泉影城                                   |      2 |     0 |
+        | 12111141 | 天津市西青区光耀华纳影城（中北店）                     |      3 |     0 |
+        | 36090331 | 高安市八景星河国际影院                                 |      3 |     0 |
+        +----------+--------------------------------------------------------+--------+-------+
+        10 rows in set (0.06 sec)
+    
+### left join on + where 过滤条件：
+     
+     
+        mysql> select  cc.code, cc.name, cc.status, count(ch.id) as total from ccc_cinemas cc  
+            left join  ccc_halls ch on ch.cinema_code = cc.code where cc.code = 11067401 group by  cc.`code` order by total desc;
+        
+        +----------+--------------------+--------+-------+
+        | code     | name               | status | total |
+        +----------+--------------------+--------+-------+
+        | 11067401 | 华影国际影城       |      2 |     1 |
+        +----------+--------------------+--------+-------+
+        1 row in set (0.00 sec)
+        
+### 结论：
+    
+    
+        inner join内连接是没有左右某部分为null的情况的，而对于left join和right join左右连接而言存在左右某部分为null的情况
+        
+        以left join左连接为例 A left join B，如果你把过滤条件写在on中，on后面的条件只对右表B有效，
+        那最终结果集中这个限制对A是没有影响的，因为就算是B中的数据被过滤了，A中的数据仍旧可以匹配null来展示（左连接性质）
+        right join也是一样
