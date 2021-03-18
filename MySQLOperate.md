@@ -791,3 +791,132 @@
         以left join左连接为例 A left join B，如果你把过滤条件写在on中，on后面的条件只对右表B有效，
         那最终结果集中这个限制对A是没有影响的，因为就算是B中的数据被过滤了，A中的数据仍旧可以匹配null来展示（左连接性质）
         right join也是一样
+
+# CASE WHEN END 和 IF
+
+## CASE WHEN END:
+    
+    用于一个条件判断有多种值的情况下分别执行不同的操作
+    
+### 1. 简单Case函数写法:
+
+
+
+    select code, name, status,
+
+        (case status
+            when 1 then '上报'
+            when 2 then '营业'
+            when 3 then '停业'
+            else '无'
+        end) as status_describe
+
+    from ccc_cinemas order by code;
+    
+### 2. Case搜索函数写法
+
+    select code, name, status,
+        (case
+          when status=1 THEN '上报'
+          when status=2 THEN '营业'
+          when status=3 THEN '停业'
+          else '无'
+        end) as status_describe
+    
+    from ccc_cinemas order by code;
+    
+### 3. 对Case生成的字段进行分组
+
+    select
+         
+          case
+              when status=1 THEN '上报'
+              when status=2 THEN '营业'
+              when status=3 THEN '停业'
+              else '无'
+          end) as status_describe, 
+          
+          count(1) as toatl
+          
+    from ccc_cinemas group by status_describe;
+    
+    
+### 4. Case操作JSON字段
+
+    select json_extract(hall_attr, "$.resolution_type") as resolution,
+    
+         (CASE 
+            WHEN json_unquote(json_extract(hall_attr, "$.resolution_type")) = 1 THEN "1.3k"
+            WHEN json_unquote(json_extract(hall_attr, "$.resolution_type")) = 2 THEN "2k"    
+            WHEN json_unquote(json_extract(hall_attr, "$.resolution_type")) = "3" THEN "4k"    
+            ELSE '无'
+         END) AS frame_type
+    
+    from ccc_halls
+    
+    
+### 5. 统计影厅的荧幕特效：
+    
+    SELECT  
+       
+       json_extract(hall_attr, "$.resolution_type") as resolution_type,
+       
+       auth_effects,
+        
+       (CASE 
+            WHEN json_extract(auth_effects, "$.CINITY") IS NOT NULL THEN 'CINITY'
+            WHEN json_extract(auth_effects, "$.IMAX") IS NOT NULL THEN 'IMAX'
+            WHEN json_extract(auth_effects, "$.CGS") IS NOT NULL THEN '中国巨幕'
+            WHEN json_extract(auth_effects, "$.DOLBY_VISION")  IS NOT NULL THEN '杜比视界'
+            WHEN json_extract(auth_effects, "$.SCREENX")  IS NOT NULL THEN 'ScreenX'
+            WHEN json_extract(auth_effects, "$.STARX")  IS NOT NULL THEN 'STARX'
+            WHEN json_extract(auth_effects, "$.BARCO_ESCAPE")  IS NOT NULL THEN 'Barco Escape'
+            ELSE '无荧幕特效'
+       END) AS frame_type
+        
+    FROM ccc_halls where auth_effects IS NOT NULL;
+    
+### 6. 荧幕特效分组统计：
+
+    SELECT  
+        
+       (CASE 
+            WHEN json_extract(auth_effects, "$.CINITY") IS NOT NULL THEN 'CINITY' 
+            WHEN json_extract(auth_effects, "$.IMAX") IS NOT NULL THEN 'IMAX'    
+            WHEN json_extract(auth_effects, "$.CGS") IS NOT NULL THEN '中国巨幕'
+            WHEN json_extract(auth_effects, "$.DOLBY_VISION")  IS NOT NULL THEN '杜比视界'
+            WHEN json_extract(auth_effects, "$.SCREENX")  IS NOT NULL THEN 'ScreenX'
+            WHEN json_extract(auth_effects, "$.STARX")  IS NOT NULL THEN 'STARX'
+            WHEN json_extract(auth_effects, "$.BARCO_ESCAPE")  IS NOT NULL THEN 'Barco Escape'
+            ELSE '无荧幕特效'
+        END) AS frame_type,
+        
+        json_extract(hall_attr, "$.resolution_type") as resolution_type,
+        
+        count(1) as total
+        
+    FROM ccc_halls where auth_effects IS NOT NULL GROUP BY frame_type, resolution_type ;
+        
+### 结论：
+    
+    简单Case函数写法只适合相等条件判断，不能用于大于、小于及不等于的判断
+    
+    Case搜索函数写法适合复杂条件判断：可用于大于、小于及不等于的判断
+
+
+## IF语句：
+
+    IF(expr1,expr2,expr3)    规则：如果 expr1 是TRUE，则返回expr2， 否则返回expr3
+    
+    SELECT name, status, IF(status=2, '营业', '非营业') as status_describe FROM ccc_cinemas 
+
+### expr1 作为一个整数值进行计算：
+
+    mysql> SELECT IF(0.1,1,0);         #  0  IF(0.1)的返回值为0，原因是 0.1 被转化为整数值，从而引起一个对 IF(0)的检验
+    
+    mysql> SELECT IF(0.1<>0,1,0);      # 1
+
+### 结论：
+    IF不像CASE那样可以多条件判断，IF只能判断“真”、“假”
+    
+    
