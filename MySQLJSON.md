@@ -342,6 +342,10 @@
       INDEX i (g)
     );
 
+### JSON数组拼接成字符串
+
+SELECT id, name, cinema_code, replace(replace(replace(replace(json_keys(auth_effects) , ' ', ''), '"', ''), '[', ''), ']', '')
+ as auth_effects FROM ccc_halls WHERE auth_effects is not null
 
 # MySQL常用函数
 
