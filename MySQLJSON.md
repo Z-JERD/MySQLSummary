@@ -346,6 +346,38 @@
 
 SELECT id, name, cinema_code, replace(replace(replace(replace(json_keys(auth_effects) , ' ', ''), '"', ''), '[', ''), ']', '')
  as auth_effects FROM ccc_halls WHERE auth_effects is not null
+ 
+ ## 查询json数组的对象数据：
+
+    +------+------+-------------+-------------------------------------------------------------+
+    | id   | name | cinema_code | vitascope                                                   |
+    +------+------+-------------+-------------------------------------------------------------+
+    | 1454 | 2    |    31100601 | [{"sn": "5997071211", "model": "", "manufacture": "BARCO"}] |
+    | 2663 | 3    |    31112601 | [{"sn": "5997071211", "model": "", "manufacture": "BARCO"}] |
+    +------+------+-------------+-------------------------------------------------------------+
+
+
+
+    查询json数组里面对象的sn等于5997071211数据：
+        
+        select id, name, cinema_code, vitascope from ccc_halls  where JSON_CONTAINS(vitascope, JSON_OBJECT('sn', "5997071211"))
+        
+## 查询json数组中元素是否存在：
+
+    +------+------+-------------+----------------------+
+    | id   | name | cinema_code | server_sn            |
+    +------+------+-------------+----------------------+
+    | 1442 | 1    |    31100601 | ["282175", "282164"] |
+    +------+------+-------------+----------------------+
+    
+    1. 查询 server_sn 中含有 282164 的 数据：
+        
+        select id, name, cinema_code, server_sn from ccc_halls where JSON_CONTAINS(server_sn, JSON_ARRAY("282164"))
+        
+    2. 查询 server_sn 中含有 282164, 282175 的 数据：
+        
+        select id, name, cinema_code, server_sn from ccc_halls where JSON_CONTAINS(server_sn, JSON_ARRAY("282175", "282164"))
+    
 
 # MySQL常用函数
 
